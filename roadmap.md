@@ -552,3 +552,17 @@
 - [x] Keuzescherm in nl/en/fr/de
 - [ ] db-pending/0299 (CONTRACT): wacht tot productie schema 0298 meldt (eigenaar deployt main)
 - [ ] Keuzescherm testen met een echte Didit-verificatie (eigenaar)
+
+## Draaiboek overdracht 2026-11-22 (Lovable, eigen infrastructuur)
+- [x] Stap 1.1 tests org-attestation groen (vitest; `bun test` in de overdracht = `bunx vitest run`)
+- [x] Stap 1.2 typecheck: harness-build groen na elke wijziging
+- [x] Stap 1.3 vertalingen trust.* in nl/en/fr/de gelijk (118 sleutels); 7 servermeldingen kregen een eigen tekst
+- [x] Stap 1.4 negatieve test foute/ontbrekende cron-secret op /api/public/cron/attestation-sweep (route heet niet trust-sweep)
+- [x] Verharding: upload-bytes altijd gewist, ook bij weigering; PDF met actieve inhoud geweigerd
+- [x] Verharding db/0300 (nog niet op Neon): declaratieticket single-use via unieke digest + 300 s venster op de databaseklok; PGlite-test
+- [x] Volledige testsuite groen: 623 testbestanden, 4.009 tests geslaagd, 0 mislukt (3 bestaande fouten door ontbrekende 0300-snapshot opgelost)
+- [x] Snapshot + db-types opnieuw uit replay, CODE_SCHEMA_LEVEL 0300 (gelijk aan hoogste db/-migratie)
+- [x] Verharding db/0300: account-merge weigert als het tweede account een geverifieerd werkadres of mandaat heeft (was stil cascade-verwijderd)
+- [ ] Stap 2 migratie 0300 op Neon-previewbranch — wacht op: bevestiging welke branch gekoppeld is + GO eigenaar; DATABASE_URL (rout_app) ontbreekt in deze preview
+- [ ] Stap 3 contract 0299 — wacht op: productie meldt schemaniveau ≥ 0300 + GO
+- [ ] Stap 4 traject 2 (grondwet, architectuur, tokens.json, openapi.yaml, 0301, /admin/devices) — wacht op afronding stap 2–3; 0301-concept overlapt met bestaande 0272 (herstel v4) en 0274 (multi-device host keys): eerst herontwerpen

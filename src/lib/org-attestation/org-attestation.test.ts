@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { belgianCheck, emailOnDomain, expectedProof, normalizeDomain, normalizeLei, normalizeVat, organisationNullifier, unquoteTxt } from "./proofs";
 import { interpretDoh, interpretWellKnown } from "./dns-verifier.server";
-import { EvidenceVaultError, openEvidence, sealEvidence, sniffMime } from "./evidence-vault.server";
+import { EvidenceVaultError, openEvidence, pdfHasActiveContent, sealEvidence, sniffMime } from "./evidence-vault.server";
 import { checkVat, checkLei } from "./vies-gleif.server";
 
 const WS = "11111111-2222-4333-8444-555555555555";
@@ -113,5 +113,19 @@ describe("evidence vault", () => {
     expect(sniffMime(new TextEncoder().encode("%PDF-1.7 <html><script>alert(1)</script>\n%%EOF"))).toBeNull();
     expect(sniffMime(new TextEncoder().encode("%PDF-1.7 <svg onload=x>\n%%EOF"))).toBeNull();
     expect(sniffMime(new TextEncoder().encode("%PDF-1.7 no trailer"))).toBeNull();
+  });
+  it("rejects PDFs with scripts, launch actions, embedded files or XFA, also behind name escapes", () => {
+    const doc = (body: string) => new TextEncoder().encode(`%PDF-1.7\n1 0 obj << ${body} >> endobj\n%%EOF`);
+    expect(sniffMime(doc("/Type /Catalog /OpenAction << /S /JavaScript /JS (app.alert(1)) >>"))).toBeNull();
+    expect(sniffMime(doc("/OpenAction << /S /J#61vaScript >>"))).toBeNull();
+    expect(sniffMime(doc("/A << /S /Launch /F (cmd.exe) >>"))).toBeNull();
+    expect(sniffMime(doc("/Names << /EmbeddedFiles 2 0 R >>"))).toBeNull();
+    expect(sniffMime(doc("/AcroForm << /XFA 3 0 R >>"))).toBeNull();
+    expect(pdfHasActiveContent(doc("/A << /S /SubmitForm >>"))).toBe(true);
+  });
+  it("still accepts an ordinary PDF that opens on a page or uses look-alike font names", () => {
+    const doc = (body: string) => new TextEncoder().encode(`%PDF-1.7\n1 0 obj << ${body} >> endobj\n%%EOF`);
+    expect(sniffMime(doc("/Type /Catalog /OpenAction [3 0 R /Fit] /Pages 2 0 R"))).toBe("application/pdf");
+    expect(sniffMime(doc("/BaseFont /JSans-Bold /FontName /JavaScriptFont"))).toBe("application/pdf");
   });
 });
