@@ -2758,7 +2758,8 @@
       ],
       "triggers": [
         "CREATE TRIGGER alias_profiles_handle_namespace_guard BEFORE INSERT OR UPDATE OF handle ON public.alias_profiles FOR EACH ROW EXECUTE FUNCTION alias_profiles_handle_namespace_guard()",
-        "CREATE TRIGGER alias_profiles_handle_registry_sync AFTER INSERT OR DELETE OR UPDATE OF handle, user_id ON public.alias_profiles FOR EACH ROW EXECUTE FUNCTION handle_registry_sync_aliases()"
+        "CREATE TRIGGER alias_profiles_handle_registry_sync AFTER INSERT OR DELETE OR UPDATE OF handle, user_id ON public.alias_profiles FOR EACH ROW EXECUTE FUNCTION handle_registry_sync_aliases()",
+        "CREATE TRIGGER alias_profiles_rename_cooldown BEFORE UPDATE OF handle ON public.alias_profiles FOR EACH ROW EXECUTE FUNCTION rout_enforce_alias_rename_cooldown()"
       ],
       "rls": true,
       "forceRls": false,
@@ -19083,6 +19084,7 @@
         "CREATE TRIGGER profiles_early_verified_promo BEFORE UPDATE OF verified ON public.profiles FOR EACH ROW EXECUTE FUNCTION grant_early_verified_promo()",
         "CREATE TRIGGER profiles_handle_namespace_guard BEFORE INSERT OR UPDATE OF username, subdomain_alias ON public.profiles FOR EACH ROW EXECUTE FUNCTION profiles_handle_namespace_guard()",
         "CREATE TRIGGER profiles_handle_registry_sync AFTER INSERT OR UPDATE OF username, verified, handle_grant, workspace_id ON public.profiles FOR EACH ROW EXECUTE FUNCTION handle_registry_sync_profiles()",
+        "CREATE TRIGGER profiles_root_handle_policy BEFORE INSERT OR UPDATE OF username ON public.profiles FOR EACH ROW EXECUTE FUNCTION rout_enforce_root_handle_policy()",
         "CREATE TRIGGER profiles_touch_updated_at BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION touch_updated_at()"
       ],
       "rls": true,
@@ -37064,6 +37066,18 @@
       "name": "rout_due_sunset_accounts",
       "args": "",
       "def": "CREATE OR REPLACE FUNCTION public.rout_due_sunset_accounts()\n RETURNS TABLE(id uuid, ba text)\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$ select u.id, u.user_metadata->>'neon_auth_id' from public.users u\n        where u.account_status = 'migrated_sunset' and u.sunset_at < now() limit 200 $function$"
+    },
+    {
+      "schema": "public",
+      "name": "rout_enforce_alias_rename_cooldown",
+      "args": "",
+      "def": "CREATE OR REPLACE FUNCTION public.rout_enforce_alias_rename_cooldown()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\ndeclare\n  v_last timestamptz;\nbegin\n  if pg_catalog.lower(old.handle) = pg_catalog.lower(new.handle) or old.user_id is distinct from new.user_id then\n    return new;\n  end if;\n  select r.last_renamed_at into v_last from public.handle_registry r\n   where r.user_id = new.user_id and r.namespace = 'user_unverified' and r.status = 'ACTIVE'\n   limit 1;\n  if v_last is not null and v_last > now() - interval '30 days' then\n    raise exception 'alias_rename_cooldown: next rename after %', v_last + interval '30 days' using errcode = '22023';\n  end if;\n  return new;\nend\n$function$"
+    },
+    {
+      "schema": "public",
+      "name": "rout_enforce_root_handle_policy",
+      "args": "",
+      "def": "CREATE OR REPLACE FUNCTION public.rout_enforce_root_handle_policy()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\ndeclare\n  v_h text := pg_catalog.lower(pg_catalog.btrim(coalesce(new.username, '')));\nbegin\n  if v_h = '' then\n    return new;\n  end if;\n  if tg_op = 'UPDATE' and pg_catalog.lower(coalesce(old.username, '')) = v_h then\n    return new;\n  end if;\n  if exists (select 1 from public.handle_registry r where r.namespace = 'system_reserved' and r.handle_normalized = v_h) then\n    raise exception 'handle_reserved: % is reserved', v_h using errcode = '22023';\n  end if;\n  if not (new.verified or new.handle_grant is not null or new.workspace_id is not null\n          or public.rout_didit_attested(new.id)) then\n    raise exception 'root_handle_identity_required' using errcode = '42501';\n  end if;\n  return new;\nend\n$function$"
     },
     {
       "schema": "public",
