@@ -132,19 +132,19 @@ export interface EvidenceInput {
 }
 
 export async function submitEvidence(input: EvidenceInput) {
-  if (!evidenceConfigured()) return { ok: false as const, reason: "evidence_not_configured" };
-  if (sniffMime(input.bytes) !== input.mime) return { ok: false as const, reason: "file_type_mismatch" };
-  let nullifier: Uint8Array | null = null;
-  if (input.subject === "public_body") {
-    if (!input.publicBodyId || !input.country) return { ok: false as const, reason: "invalid" };
-    nullifier = organisationNullifier("public_body", `${input.country}:${input.publicBodyId.replace(/\s/g, "").toUpperCase()}`, identityPepper());
-  }
-  const id = randomUUID();
   let sealedOut: { sealed: Uint8Array; sha256: Uint8Array };
+  let nullifier: Uint8Array | null = null;
+  const id = randomUUID();
   try {
+    if (!evidenceConfigured()) return { ok: false as const, reason: "evidence_not_configured" };
+    if (sniffMime(input.bytes) !== input.mime) return { ok: false as const, reason: "file_type_mismatch" };
+    if (input.subject === "public_body") {
+      if (!input.publicBodyId || !input.country) return { ok: false as const, reason: "invalid" };
+      nullifier = organisationNullifier("public_body", `${input.country}:${input.publicBodyId.replace(/\s/g, "").toUpperCase()}`, identityPepper());
+    }
     sealedOut = sealEvidence(input.workspaceId, id, input.bytes);
   } finally {
-    input.bytes.fill(0); // plaintext never outlives the seal, also when sealing fails
+    input.bytes.fill(0); // plaintext never outlives this call: refused, failed or sealed
   }
   const { sealed, sha256: digest } = sealedOut;
   const r = (await rpc("rout_trust_evidence_submit", [

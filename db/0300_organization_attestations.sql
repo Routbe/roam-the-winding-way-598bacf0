@@ -151,6 +151,9 @@ create table if not exists public.workspace_mandates (
   constraint workspace_mandate_ended check ((status in ('active', 'frozen')) = (ended_at is null))
 );
 create unique index if not exists workspace_mandates_one_open on public.workspace_mandates (workspace_id, holder_user_id, level) where status in ('active', 'frozen');
+-- A declaration statement embeds its ticket nonce and challenge, so one ticket yields exactly one digest:
+-- this index makes the ticket single-use across every server instance (the in-memory ledger is per isolate).
+create unique index if not exists workspace_mandates_declared_digest_once on public.workspace_mandates (statement_digest) where level = 'declared';
 create index if not exists workspace_mandates_attestation_fkx on public.workspace_mandates (attestation_id);
 create index if not exists workspace_mandates_holder_fkx on public.workspace_mandates (holder_user_id);
 create index if not exists workspace_mandates_work_email_fkx on public.workspace_mandates (work_email_id);
@@ -855,6 +858,17 @@ begin
      or v_stmt ->> 'holder' is distinct from v_user::text or v_stmt ->> 'entity' is distinct from v_entity::text
      or v_stmt ->> 'domain' is distinct from v_domain or v_stmt ->> 'workEmail' is distinct from v_email::text then
     return pg_catalog.jsonb_build_object('ok', false, 'reason', 'statement_mismatch');
+  end if;
+  -- Ticket window on the database clock: issued at most 300 s (+5 s skew) ago and not in the future.
+  if v_stmt ->> 'nonce' is null or v_stmt ->> 'nonce' !~ '^[0-9a-f]{32}$'
+     or pg_catalog.jsonb_typeof(v_stmt -> 'issuedAt') is distinct from 'number' or v_stmt ->> 'issuedAt' !~ '^[0-9]{1,12}$'
+     or (v_stmt ->> 'issuedAt')::bigint < pg_catalog.floor(pg_catalog.date_part('epoch', pg_catalog.clock_timestamp()))::bigint - 305
+     or (v_stmt ->> 'issuedAt')::bigint > pg_catalog.floor(pg_catalog.date_part('epoch', pg_catalog.clock_timestamp()))::bigint + 5 then
+    return pg_catalog.jsonb_build_object('ok', false, 'reason', 'ticket_invalid');
+  end if;
+  -- Replay of an already used ticket: refused before any existing mandate is superseded.
+  if exists (select 1 from public.workspace_mandates m where m.level = 'declared' and m.statement_digest = p_digest) then
+    return pg_catalog.jsonb_build_object('ok', false, 'reason', 'ticket_replayed');
   end if;
   perform public.rout_trust_end_mandates(p_ws, v_user, 'declared', 'superseded', 'superseded', v_user);
   insert into public.workspace_mandates (workspace_id, attestation_id, holder_user_id, level, basis, statement, statement_digest,

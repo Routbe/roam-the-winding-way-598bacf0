@@ -65,13 +65,26 @@ function pdfTrailerOk(bytes: Uint8Array): boolean {
   return tail.includes("%%EOF");
 }
 
+// Active PDF content: scripts, launch/submit/import actions, embedded files, rich media and XFA forms.
+// Name escapes (/J#61vaScript) are decoded first. Content inside compressed object streams is not
+// inflated here, so this narrows the attack surface; the admin viewer stays sandboxed regardless.
+const PDF_ACTIVE = /\/(?:JavaScript|JS|Launch|EmbeddedFiles?|RichMedia|XFA|SubmitForm|ImportData|GoToR|GoToE)(?![A-Za-z0-9])/;
+const latin1 = new TextDecoder("latin1");
+
+export function pdfHasActiveContent(bytes: Uint8Array): boolean {
+  const text = latin1.decode(bytes).replace(/\/[^\s/[\]<>(){}%]*#[^\s/[\]<>(){}%]*/g, (name) =>
+    name.replace(/#([0-9A-Fa-f]{2})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16))));
+  return PDF_ACTIVE.test(text);
+}
+
 /**
  * Recognises the file by its magic bytes only (never extension or Content-Type); the declared type
- * must match. Polyglots (markup in the first KiB) and PDFs without a trailer are refused.
+ * must match. Polyglots (markup in the first KiB), PDFs without a trailer and PDFs with active
+ * content (scripts, launch actions, embedded files, XFA) are refused.
  */
 export function sniffMime(bytes: Uint8Array): EvidenceMime | null {
   if (bytes.length < 3 || looksPolyglot(bytes)) return null;
-  if (bytes.length >= 5 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46 && bytes[4] === 0x2d) return pdfTrailerOk(bytes) ? "application/pdf" : null;
+  if (bytes.length >= 5 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46 && bytes[4] === 0x2d) return pdfTrailerOk(bytes) && !pdfHasActiveContent(bytes) ? "application/pdf" : null;
   if (bytes.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47 && bytes[4] === 0x0d && bytes[5] === 0x0a && bytes[6] === 0x1a && bytes[7] === 0x0a) return "image/png";
   if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
   return null;
