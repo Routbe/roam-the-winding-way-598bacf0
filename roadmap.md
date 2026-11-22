@@ -574,4 +574,4 @@
 - [ ] /press: perskit volgens aangeleverde tekst, alleen geverifieerde feiten, NL/FR/DE/EN
 - [ ] Tekst voor european-alternatives.eu klaarzetten (alleen geverifieerde feiten)
 - [ ] SECURITY_ARCHITECTURE.md: assume-breach-lagen + top-0,1%-lagen met eerlijke status per laag en volgorde
-- [ ] Stap 4 traject 2 (grondwet, architectuur, tokens.json, openapi.yaml, 0301, /admin/devices) — wacht op afronding stap 2–3; 0301-concept overlapt met bestaande 0272 (herstel v4) en 0274 (multi-device host keys): eerst herontwerpen
+- [ ] Stap 4 traject 2 (grondwet, architectuur, tokens.json, openapi.yaml, schema-concept "0301" — krijgt nu een nieuw nummer (0302+), /admin/devices) — wacht op afronding stap 2–3; 0301-concept overlapt met bestaande 0272 (herstel v4) en 0274 (multi-device host keys): eerst herontwerpen
