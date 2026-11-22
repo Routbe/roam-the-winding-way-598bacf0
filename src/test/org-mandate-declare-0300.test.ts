@@ -25,6 +25,7 @@ const b32 = (n: number) => `'\\x${n.toString(16).padStart(2, "0").repeat(32)}'::
 let db: PGlite;
 let entityId = "";
 let workEmailId = "";
+let firstIssuedAt = 0;
 
 beforeAll(async () => {
   db = await replayDb((f) => f !== "0300_organization_attestations.sql");
@@ -80,14 +81,14 @@ const mandates = async () => (await db.query<{ status: string; n: number }>(
 
 describe("db/0300 passkey mandate declaration", () => {
   it("accepts a fresh ticket exactly as the server signs it", async () => {
-    const r = await declare(signed(nonce("a"), now()));
+    firstIssuedAt = now();
+    const r = await declare(signed(nonce("a"), firstIssuedAt));
     expect(r.ok, r.reason).toBe(true);
     expect(await mandates()).toEqual([{ status: "active", n: 1 }]);
   });
 
   it("refuses the same ticket a second time and leaves the existing mandate active", async () => {
-    const r = await declare(signed(nonce("a"), now() - 1 >= 0 ? (await db.query<{ t: string }>(
-      `select (statement::jsonb ->> 'issuedAt') as t from public.workspace_mandates where workspace_id = '${W}' and status = 'active'`)).rows[0]!.t as unknown as number * 1 : 0));
+    const r = await declare(signed(nonce("a"), firstIssuedAt));
     expect(r).toEqual({ ok: false, reason: "ticket_replayed" });
     expect(await mandates()).toEqual([{ status: "active", n: 1 }]);
   });
