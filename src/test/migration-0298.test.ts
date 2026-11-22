@@ -1,7 +1,7 @@
 // @vitest-environment node
 /**
- * db/0298 (handle registry, dual-profile model) and the held-back CONTRACT
- * db-pending/0299 on an offline PGlite replay of db/. Never touches Neon. Proves:
+ * db/0298 (handle registry, dual-profile model) and the CONTRACT db/0301 (written as
+ * db-pending/0299) on an offline PGlite replay of db/. Never touches Neon. Proves:
  *   - one ACTIVE /u/ alias and one ACTIVE root handle per member, enforced by partial
  *     unique indexes, and one live owner per (namespace, handle);
  *   - the shape rule refuses `..`, `.-`, `._`, `-.` and `_.`;
@@ -11,7 +11,7 @@
  *     names and the member's own alias, starts blank by default or copies the alias links
  *     once, can hide the alias, and is idempotent;
  *   - rout_app reads only its own registry rows; helpers are pinned definers nobody calls;
- *   - 0299 converts unverified root handles to /u/ aliases idempotently, then blocks root
+ *   - 0301 converts unverified root handles to /u/ aliases idempotently, then blocks root
  *     handles without eligibility, reserved names, and alias renames within 30 days;
  *   - both rollbacks restore the previous state.
  */
@@ -78,7 +78,8 @@ const claim = (uid: string, handle: string, copy = false, hide = false) =>
   asApp<{ h: string }>(uid, "select public.rout_claim_verified_root_handle($1, $2, $3) as h", [handle, copy, hide]);
 
 beforeAll(async () => {
-  db = await replayDb();
+  // 0301 runs later in this file, on top of the 0298 state it contracts.
+  db = await replayDb((f) => f !== "0301_handle_namespace_contract.sql");
 }, 600_000);
 afterAll(async () => {
   await db?.close();
@@ -280,7 +281,7 @@ describe("db/0298 verified root claim", () => {
   });
 });
 
-describe("db-pending/0299 contract (Option A + guards)", () => {
+describe("db/0301 contract (Option A + guards)", () => {
   let unverifiedNoAlias: string;
   let unverifiedWithAlias: string;
   let verified: string;
@@ -289,7 +290,7 @@ describe("db-pending/0299 contract (Option A + guards)", () => {
     await db.query("update public.profiles set display_name = 'Free', tagline = 'hi' where id = $1", [unverifiedNoAlias]);
     unverifiedWithAlias = await member(41, "rootname41", { alias: "alias41aa" });
     verified = await member(42, "verified.name", { verified: true });
-    await applyPending(db, "0299_handle_namespace_contract.sql");
+    await applyReleased(db, "0301_handle_namespace_contract.sql");
   });
 
   it("moves an unverified root handle without alias to /u/ with its content", async () => {
@@ -316,7 +317,7 @@ describe("db-pending/0299 contract (Option A + guards)", () => {
     expect((await db.query<{ username: string }>("select username from public.profiles where id = $1", [verified])).rows[0]!.username).toBe("verified.name");
     expect((await db.query<{ username: string }>("select username from public.profiles where id = $1", [id(31)])).rows[0]!.username).toBe("jona-desmet");
     const before = (await db.query("select count(*)::int as n from public.alias_profiles")).rows;
-    await applyPending(db, "0299_handle_namespace_contract.sql");
+    await applyReleased(db, "0301_handle_namespace_contract.sql");
     expect((await db.query("select count(*)::int as n from public.alias_profiles")).rows).toEqual(before);
   });
 
@@ -341,10 +342,10 @@ describe("db-pending/0299 contract (Option A + guards)", () => {
 });
 
 describe("rollbacks", () => {
-  it("0298 rollback refuses while 0299 is installed, then both roll back cleanly", async () => {
-    await expect(applyPending(db, "0298_handle_registry_dual_profile_rollback.sql")).rejects.toThrow(/roll back 0299 first/);
+  it("0298 rollback refuses while 0301 is installed, then both roll back cleanly", async () => {
+    await expect(applyPending(db, "0298_handle_registry_dual_profile_rollback.sql")).rejects.toThrow(/roll back 0301 first/);
     await db.exec("rollback;");
-    await applyPending(db, "0299_handle_namespace_contract_rollback.sql");
+    await applyPending(db, "0301_handle_namespace_contract_rollback.sql");
     await applyPending(db, "0298_handle_registry_dual_profile_rollback.sql");
     const left = (await db.query<{ t: string | null }>("select to_regclass('public.handle_registry')::text as t")).rows[0]!;
     expect(left.t).toBeNull();

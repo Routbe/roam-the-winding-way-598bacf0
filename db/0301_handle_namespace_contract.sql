@@ -1,11 +1,11 @@
--- 0299 (CONTRACT, held back): the root namespace rout.be/<handle> becomes exclusive to
+-- 0301 (CONTRACT; written as db-pending/0299, renumbered 2026-11-22 because it is applied
+-- after 0300, so the replay order stays 0298 -> 0300 -> 0301): the root namespace rout.be/<handle> becomes exclusive to
 -- accounts that may hold it (Didit attestation, verified profile, admin/team grant or
 -- workspace profile), system-reserved names can no longer be taken by a personal
 -- account, and a /u/ alias can be renamed at most once per 30 days.
 --
--- Apply only after production runs the code that uses db/0298 (the public health probe
--- reports schema 0298 or higher), then move this file into db/ and raise
--- CODE_SCHEMA_LEVEL. Needs db/0298.
+-- Applied after production reported schema 0300 (uses db/0298) and the owner's GO.
+-- Needs db/0298.
 --
 -- Option A (idempotent): every account that may not hold a root handle but still has
 -- profiles.username keeps that name as its free /u/ alias. When the account has no alias
@@ -14,7 +14,7 @@
 -- already has an alias, the alias stays. Then profiles.username becomes NULL; the 0298
 -- trigger tombstones the released root name for 14 days. Running it again finds nothing.
 --
--- Rollback: db-pending/0299_handle_namespace_contract_rollback.sql removes the guards;
+-- Rollback: db-pending/0301_handle_namespace_contract_rollback.sql removes the guards;
 -- converted aliases stay (no data is deleted).
 
 insert into public.alias_profiles (

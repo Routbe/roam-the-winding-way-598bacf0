@@ -29,7 +29,7 @@ afterAll(async () => { await db.close(); });
 async function seed() {
   await db.exec("begin");
   await db.query("insert into public.users(id,email) values($1,'r@example.test'),($2,'a@example.test'),($3,'r2@example.test'),($4,'r3@example.test')", [R, A, R2, R3]);
-  await db.query("update public.profiles set username = case id when $1::uuid then 'recipient' when $2::uuid then 'sender' when $3::uuid then 'second' else 'third' end, display_prefs = coalesce(display_prefs, '{}'::jsonb) || '{\"questionsEnabled\":true,\"qaAudience\":\"public_unrestricted\"}'::jsonb where id in ($1,$2,$3,$4)", [R, A, R2, R3]);
+  await db.query("update public.profiles set handle_grant = 'root-handle-fixture', username = case id when $1::uuid then 'recipient' when $2::uuid then 'sender' when $3::uuid then 'second' else 'third' end, display_prefs = coalesce(display_prefs, '{}'::jsonb) || '{\"questionsEnabled\":true,\"qaAudience\":\"public_unrestricted\"}'::jsonb where id in ($1,$2,$3,$4)", [R, A, R2, R3]);
 }
 async function as(id: string | null) {
   await db.exec("reset role");

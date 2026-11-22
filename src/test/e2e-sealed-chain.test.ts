@@ -114,8 +114,8 @@ beforeAll(async () => {
   h.db = await replayDb();
   await h.db.exec(`
     insert into public.users (id, email) values ('${HOST}', 'ann@example.org'), ('${OTHER}', 'bob@example.org');
-    insert into public.profiles (id, username, blocks) values ('${HOST}', 'ann', '[{"kind":"booking_request"}]'), ('${OTHER}', 'bob', '[]')
-      on conflict (id) do update set username = excluded.username, blocks = excluded.blocks;
+    insert into public.profiles (id, username, blocks, handle_grant) values ('${HOST}', 'ann', '[{"kind":"booking_request"}]', 'root-handle-fixture'), ('${OTHER}', 'bob', '[]', 'root-handle-fixture')
+      on conflict (id) do update set handle_grant = excluded.handle_grant, username = excluded.username, blocks = excluded.blocks;
     insert into public.booking_event_types (id, user_id, slug, title, duration_minutes, minimum_notice_hours) values ('${ET}', '${HOST}', 'intro', 'Intro', 30, 0);
     insert into public.booking_event_type_hosts (event_type_id, user_id, priority) values ('${ET}', '${HOST}', 0);
     insert into public.availability_cache (user_id, day, free_bits) values ('${HOST}', '${day}', repeat('1', 96)::bit(96));

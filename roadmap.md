@@ -550,7 +550,7 @@
 - [x] Tests handle-generator, keuzescherm /verify/handle-select, Didit-terugkeer naar het keuzescherm
 - [x] db/0298 live op Neon (2026-11-21, nagekeken)
 - [x] Keuzescherm in nl/en/fr/de
-- [ ] db-pending/0299 (CONTRACT): wacht tot productie schema 0298 meldt (eigenaar deployt main)
+- [x] db-pending/0299 (CONTRACT): live als db/0301 (zie hieronder)
 - [ ] Keuzescherm testen met een echte Didit-verificatie (eigenaar)
 
 ## Draaiboek overdracht 2026-11-22 (Lovable, eigen infrastructuur)
@@ -565,11 +565,13 @@
 - [x] Verharding db/0300: account-merge weigert als het tweede account een geverifieerd werkadres of mandaat heeft (was stil cascade-verwijderd)
 - [x] Stap 2a migratie 0300 op Neon ep-autumn-salad (branch br-purple-smoke-b1kvivdv) (2026-11-22 15:58 UTC): geschiedenis 0 afwijkingen, generale repetitie teruggedraaid, toegepast in 1 transactie (sha256 2425ffb9…), nacontrole: 557 definers met vast search_path, merge-blokkades actief, RLS aan op 7 tabellen, functierechten identiek aan replay
 - [x] Stap 2b productie: ep-autumn-salad blijkt de database van rout.be zelf (bevestigd 2026-11-22 16:13 UTC: een bezoek aan rout.be/<handle> verhoogde de rout_app-statements op deze compute van 3506 naar 3542; de tweede koppeling van de eigenaar wijst naar dezelfde host). 0300 staat dus sinds 15:58 UTC op productie; rout.be meldt code-niveau 0300. GO productie eigenaar 2026-11-22 16:09 UTC. Geen aparte preview-database gevonden.
-- [ ] Stap 3 contract 0299 — voorwaarde vervuld (productie meldt 0300). Impact gemeten (alleen-lezen): 20 profielen met hoofdnaam, 8 niet-gerechtigd (o.a. jdelplanche00, jonadesmet57533, rudidewinter92). 4 krijgen hun naam als /u/-alias, 4 hebben al een alias en verliezen de hoofdnaam (14 dagen tombstone). Wacht op: expliciete GO eigenaar met deze impact.
+- [x] Stap 3 contract 0299 — live op productie als db/0301 (2026-11-22 16:18 UTC, GO eigenaar), hernummerd zodat de volgorde in db/ gelijk is aan Neon. Na afloop: 12 hoofdnamen, 0 niet-gerechtigd, 18 aliassen, 7 namen 14 dagen geblokkeerd; CODE_SCHEMA_LEVEL 0301.
+- [ ] Eén lid heeft een aliasnaam met komma's die niet aan de naamregels voldoet en daardoor niet in het register staat — wacht op: eigenaar vraagt dat lid een geldige naam te kiezen
+- [ ] Productie meldt 0301 pas na deploy van main — wacht op: deploy door eigenaar
 
 ## Na 0300 (opdracht eigenaar 2026-11-22 16:09)
-- [ ] SEO/GEO: audit tegen de 10 pijlers + atomaire fasering S1–S7 (documenten zeggen uitdrukkelijk: alleen plan, nog geen code)
-- [ ] /press: perskit volgens aangeleverde tekst, alleen geverifieerde feiten, NL/FR/DE/EN
-- [ ] Tekst voor european-alternatives.eu klaarzetten (alleen geverifieerde feiten)
-- [ ] SECURITY_ARCHITECTURE.md: assume-breach-lagen + top-0,1%-lagen met eerlijke status per laag en volgorde
-- [ ] Stap 4 traject 2 (grondwet, architectuur, tokens.json, openapi.yaml, 0301, /admin/devices) — wacht op afronding stap 2–3; 0301-concept overlapt met bestaande 0272 (herstel v4) en 0274 (multi-device host keys): eerst herontwerpen
+- [x] SEO/GEO: audit tegen de 10 pijlers + fasering S1–S7 → docs/seo/PLAN-S1-S7.md (alleen plan). S1 wacht op GO; S4/S5 wachten op architectuurbeslissing
+- [ ] /press: perskit volgens aangeleverde tekst, alleen geverifieerde feiten, NL/FR/DE/EN — feiten nagekeken; wacht op: perscontactadres van eigenaar
+- [ ] Tekst voor european-alternatives.eu klaarzetten (alleen geverifieerde feiten) — wacht op: zelfde contactgegevens
+- [x] SECURITY_ARCHITECTURE.md → docs/security/SECURITY_ARCHITECTURE.md (stand per laag + fases B1–B8, alleen plan); B1 wacht op GO
+- [ ] Stap 4 traject 2 (grondwet, architectuur, tokens.json, openapi.yaml, schema-concept "0301" — krijgt nu een nieuw nummer (0302+), /admin/devices) — wacht op afronding stap 2–3; 0301-concept overlapt met bestaande 0272 (herstel v4) en 0274 (multi-device host keys): eerst herontwerpen

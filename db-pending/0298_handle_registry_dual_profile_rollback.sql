@@ -1,12 +1,12 @@
 -- Rollback of db/0298_handle_registry_dual_profile.sql. Refuses while the CONTRACT
--- (db-pending/0299_handle_namespace_contract.sql) is still installed, because that
+-- (db/0301_handle_namespace_contract.sql) is still installed, because that
 -- step depends on the registry. Removes the registry, its triggers and functions and
 -- the two enums. The public_profile_id columns stay (additive, harmless) so public
 -- identifiers already handed out keep working if 0298 is re-applied.
 do $guard$
 begin
   if pg_catalog.to_regprocedure('public.rout_enforce_root_handle_policy()') is not null then
-    raise exception '0298 rollback: roll back 0299 first';
+    raise exception '0298 rollback: roll back 0301 first';
   end if;
 end
 $guard$;

@@ -20,8 +20,8 @@ beforeAll(async () => {
   db = await replayDb();
   await db.exec(`
     insert into public.users (id, email) values ('${MEMBER}', 'm@example.test'), ('${KYC}', 'k@example.test');
-    insert into public.profiles (id, username) values ('${MEMBER}', 'jona'), ('${KYC}', 'kyc')
-      on conflict (id) do update set username = excluded.username;
+    insert into public.profiles (id, username, handle_grant) values ('${MEMBER}', 'jona', 'root-handle-fixture'), ('${KYC}', 'kyc', 'root-handle-fixture')
+      on conflict (id) do update set handle_grant = excluded.handle_grant, username = excluded.username;
     insert into public.identity_verifications (user_id, is_verified, verification_provider, unique_human_id) values ('${KYC}', true, 'didit', 'n-kyc');
   `);
 }, 300_000);

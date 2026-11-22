@@ -20,10 +20,10 @@ beforeAll(async () => {
   const ids = [DIDIT, UPGRADED, HUMAN, NOT_VERIFIED, FAILED];
   await db.exec(`
     insert into public.users (id, email) values ${ids.map((id, i) => `('${id}', 'm${i}@example.test')`).join(", ")};
-    insert into public.profiles (id, username, verified) values
-      ('${DIDIT}', 'didit', true), ('${UPGRADED}', 'upgraded', true), ('${HUMAN}', 'human', true),
-      ('${NOT_VERIFIED}', 'notverified', false), ('${FAILED}', 'failed', true)
-      on conflict (id) do update set username = excluded.username, verified = excluded.verified;
+    insert into public.profiles (id, username, verified, handle_grant) values
+      ('${DIDIT}', 'didit', true, null), ('${UPGRADED}', 'upgraded', true, null), ('${HUMAN}', 'human', true, null),
+      ('${NOT_VERIFIED}', 'notverified', false, 'root-handle-fixture'), ('${FAILED}', 'failed', true, null)
+      on conflict (id) do update set username = excluded.username, verified = excluded.verified, handle_grant = excluded.handle_grant;
     insert into public.identity_verifications (user_id, is_verified, verified_real_name, verification_provider, unique_human_id) values
       ('${DIDIT}', true, 'Ann Didit', 'didit', 'h1'),
       ('${UPGRADED}', true, 'Bo W', 'w_identity', 'h2'),

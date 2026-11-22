@@ -567,7 +567,7 @@ describe("batch 3 booking functions after 0257 (all migrations replayed)", () =>
       await db.exec("begin");
       try {
         await one("insert into public.users (id, email) values ($1, 'host@example.test')", [host]);
-        await one("insert into public.profiles (id, username, display_name) values ($1, 'hosty', 'Host') on conflict (id) do update set username = 'hosty'", [host]);
+        await one("insert into public.profiles (id, username, display_name, handle_grant) values ($1, 'hosty', 'Host', 'root-handle-fixture') on conflict (id) do update set handle_grant = excluded.handle_grant, username = 'hosty'", [host]);
         await one("insert into public.booking_event_types (id, user_id, slug, title, duration_minutes, minimum_notice_hours, max_days_ahead) values ($1, $2, 'intro', 'Intro', 30, 0, 30)", [free, host]);
         await one("insert into public.booking_event_types (id, user_id, slug, title, duration_minutes, minimum_notice_hours, max_days_ahead, price_cents, currency) values ($1, $2, 'paid', 'Paid', 30, 0, 30, 1000, 'eur')", [paid, host]);
         await one("insert into public.booking_event_type_hosts (event_type_id, user_id) values ($1, $3), ($2, $3)", [free, paid, host]);
