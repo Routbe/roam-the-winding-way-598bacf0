@@ -55,6 +55,10 @@ export const MERGE_TABLES: Readonly<Record<string, MergeTableRule>> = {
   // Handle registry (0298): derived from profiles.username and alias_profiles by triggers. A moved
   // alias row carries its registry row along; the secondary's other rows go with the account.
   handle_registry: r("drop"),
+  // Organisation trust (0300): a verified work e-mail belongs to the person whose legal identity confirmed
+  // it and cascades on a user delete; execute_account_merge refuses the merge (also for the secondary's
+  // mandates, keyed by holder_user_id) instead of silently ending them.
+  workspace_work_emails: r("skip"),
   // Omni ingestion and live-presence rows (0185-0190) were added after the merge
   // manifest was reviewed: until a move strategy is reviewed, a secondary
   // account that owns any of them blocks the merge instead of losing data.
