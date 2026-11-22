@@ -560,7 +560,9 @@
 - [x] Stap 1.4 negatieve test foute/ontbrekende cron-secret op /api/public/cron/attestation-sweep (route heet niet trust-sweep)
 - [x] Verharding: upload-bytes altijd gewist, ook bij weigering; PDF met actieve inhoud geweigerd
 - [x] Verharding db/0300 (nog niet op Neon): declaratieticket single-use via unieke digest + 300 s venster op de databaseklok; PGlite-test
-- [ ] Volledige testsuite in 4 delen draaien en resultaat vastleggen
+- [x] Volledige testsuite groen: 623 testbestanden, 4.009 tests geslaagd, 0 mislukt (3 bestaande fouten door ontbrekende 0300-snapshot opgelost)
+- [x] Snapshot + db-types opnieuw uit replay, CODE_SCHEMA_LEVEL 0300 (gelijk aan hoogste db/-migratie)
+- [x] Verharding db/0300: account-merge weigert als het tweede account een geverifieerd werkadres of mandaat heeft (was stil cascade-verwijderd)
 - [ ] Stap 2 migratie 0300 op Neon-previewbranch — wacht op: bevestiging welke branch gekoppeld is + GO eigenaar; DATABASE_URL (rout_app) ontbreekt in deze preview
 - [ ] Stap 3 contract 0299 — wacht op: productie meldt schemaniveau ≥ 0300 + GO
 - [ ] Stap 4 traject 2 (grondwet, architectuur, tokens.json, openapi.yaml, 0301, /admin/devices) — wacht op afronding stap 2–3; 0301-concept overlapt met bestaande 0272 (herstel v4) en 0274 (multi-device host keys): eerst herontwerpen
