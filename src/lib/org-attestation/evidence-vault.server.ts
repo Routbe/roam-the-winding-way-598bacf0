@@ -68,7 +68,7 @@ function pdfTrailerOk(bytes: Uint8Array): boolean {
 // Active PDF content: scripts, launch/submit/import actions, embedded files, rich media and XFA forms.
 // Name escapes (/J#61vaScript) are decoded first. Content inside compressed object streams is not
 // inflated here, so this narrows the attack surface; the admin viewer stays sandboxed regardless.
-const PDF_ACTIVE = /\/(?:JavaScript|JS|Launch|EmbeddedFiles?|RichMedia|XFA|SubmitForm|ImportData|GoToR|GoToE)(?![A-Za-z0-9])/;
+const PDF_ACTIVE = /\/(?:JavaScript|JS|Launch|EmbeddedFiles?|RichMedia|XFA|SubmitForm|ImportData)(?![A-Za-z0-9_.+-])/;
 const latin1 = new TextDecoder("latin1");
 
 export function pdfHasActiveContent(bytes: Uint8Array): boolean {
