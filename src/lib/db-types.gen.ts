@@ -2264,6 +2264,28 @@ export interface PublicTreasuryRootsRow {
   "signed_at": string | Date;
 }
 
+export interface PublicTrustEvidenceReviewsRow {
+  "id": string;
+  "workspace_id": string;
+  "requester_user_id": string;
+  "subject": string;
+  "evidence_kind": string;
+  "status": string;
+  "sha256": Uint8Array;
+  "mime": string;
+  "byte_size": number;
+  "ciphertext": Uint8Array | null;
+  "subject_nullifier": Uint8Array | null;
+  "country": string | null;
+  "public_name": string | null;
+  "submitted_at": string | Date;
+  "purge_due_at": string | Date;
+  "purged_at": string | Date | null;
+  "decided_by": string | null;
+  "decided_at": string | Date | null;
+  "decision_code": string | null;
+}
+
 export interface PublicUploadRateLimitsRow {
   "client_ip": string;
   "upload_count": number;
@@ -2677,6 +2699,13 @@ export interface PublicWorkspaceAskSettingsRow {
   "updated_at": string | Date;
 }
 
+export interface PublicWorkspaceDomainChallengesRow {
+  "workspace_id": string;
+  "domain": string;
+  "nonce": Uint8Array;
+  "created_at": string | Date;
+}
+
 export interface PublicWorkspaceFaqItemsRow {
   "id": string;
   "workspace_id": string;
@@ -2707,6 +2736,42 @@ export interface PublicWorkspaceKeysRow {
   "created_by": string | null;
   "created_at": string | Date;
   "retired_at": string | Date | null;
+}
+
+export interface PublicWorkspaceMandateObjectionsRow {
+  "id": string;
+  "workspace_id": string;
+  "filed_by": string | null;
+  "filer_legal_identity": boolean;
+  "reason": string;
+  "status": string;
+  "filed_at": string | Date;
+  "decided_by": string | null;
+  "decided_at": string | Date | null;
+}
+
+export interface PublicWorkspaceMandatesRow {
+  "id": string;
+  "workspace_id": string;
+  "attestation_id": string;
+  "holder_user_id": string;
+  "level": string;
+  "status": string;
+  "basis": string;
+  "statement": string | null;
+  "statement_digest": Uint8Array;
+  "signature": string | null;
+  "signature_kid": string | null;
+  "identity_attested_at": string | Date | null;
+  "work_email_id": string | null;
+  "evidence_review_id": string | null;
+  "decided_by": string | null;
+  "activated_at": string | Date;
+  "expires_at": string | Date;
+  "frozen_at": string | Date | null;
+  "frozen_by": string | null;
+  "ended_at": string | Date | null;
+  "end_reason": string | null;
 }
 
 export interface PublicWorkspaceMemberKeysRow {
@@ -2825,6 +2890,53 @@ export interface PublicWorkspaceTransfersRow {
   "details": JsonValue;
 }
 
+export interface PublicWorkspaceTrustAttestationsRow {
+  "id": string;
+  "workspace_id": string;
+  "layer": string;
+  "kind": string;
+  "status": string;
+  "subject_nullifier": Uint8Array | null;
+  "domain": string | null;
+  "country": string | null;
+  "public_name": string | null;
+  "evidence_digest": Uint8Array;
+  "attested_by": string | null;
+  "verified_at": string | Date;
+  "last_checked_at": string | Date | null;
+  "failing_since": string | Date | null;
+  "expires_at": string | Date | null;
+  "ended_at": string | Date | null;
+  "end_reason": string | null;
+}
+
+export interface PublicWorkspaceTrustEventsRow {
+  "id": string;
+  "workspace_id": string;
+  "subject_id": string | null;
+  "event": string;
+  "actor_user_id": string | null;
+  "detail": JsonValue;
+  "occurred_at": string | Date;
+  "prev_hash": Uint8Array;
+  "row_hash": Uint8Array;
+}
+
+export interface PublicWorkspaceWorkEmailsRow {
+  "id": string;
+  "workspace_id": string;
+  "user_id": string;
+  "domain": string;
+  "email_hash": Uint8Array;
+  "code_hash": Uint8Array | null;
+  "status": string;
+  "attempts": number;
+  "created_at": string | Date;
+  "code_expires_at": string | Date;
+  "verified_at": string | Date | null;
+  "expires_at": string | Date | null;
+}
+
 export interface PublicWorkspacesRow {
   "id": string;
   "name": string;
@@ -2846,6 +2958,7 @@ export interface PublicWorkspacesRow {
   "icon": string | null;
   "encrypted_config": string | null;
   "encrypted_config_key_id": string | null;
+  "entity_type": string;
 }
 
 export interface StorageBucketsRow {
@@ -3052,6 +3165,7 @@ export interface DbTables {
   "public.tracked_qrs": PublicTrackedQrsRow;
   "public.treasury_merkle_nodes": PublicTreasuryMerkleNodesRow;
   "public.treasury_roots": PublicTreasuryRootsRow;
+  "public.trust_evidence_reviews": PublicTrustEvidenceReviewsRow;
   "public.upload_rate_limits": PublicUploadRateLimitsRow;
   "public.used_nonces": PublicUsedNoncesRow;
   "public.user_assets": PublicUserAssetsRow;
@@ -3086,9 +3200,12 @@ export interface DbTables {
   "public.webhook_endpoints": PublicWebhookEndpointsRow;
   "public.webhook_events": PublicWebhookEventsRow;
   "public.workspace_ask_settings": PublicWorkspaceAskSettingsRow;
+  "public.workspace_domain_challenges": PublicWorkspaceDomainChallengesRow;
   "public.workspace_faq_items": PublicWorkspaceFaqItemsRow;
   "public.workspace_invites": PublicWorkspaceInvitesRow;
   "public.workspace_keys": PublicWorkspaceKeysRow;
+  "public.workspace_mandate_objections": PublicWorkspaceMandateObjectionsRow;
+  "public.workspace_mandates": PublicWorkspaceMandatesRow;
   "public.workspace_member_keys": PublicWorkspaceMemberKeysRow;
   "public.workspace_members": PublicWorkspaceMembersRow;
   "public.workspace_profile_drafts": PublicWorkspaceProfileDraftsRow;
@@ -3099,6 +3216,9 @@ export interface DbTables {
   "public.workspace_social_links": PublicWorkspaceSocialLinksRow;
   "public.workspace_tip_settings": PublicWorkspaceTipSettingsRow;
   "public.workspace_transfers": PublicWorkspaceTransfersRow;
+  "public.workspace_trust_attestations": PublicWorkspaceTrustAttestationsRow;
+  "public.workspace_trust_events": PublicWorkspaceTrustEventsRow;
+  "public.workspace_work_emails": PublicWorkspaceWorkEmailsRow;
   "public.workspaces": PublicWorkspacesRow;
   "storage.buckets": StorageBucketsRow;
   "storage.objects": StorageObjectsRow;
