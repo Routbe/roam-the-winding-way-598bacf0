@@ -53,8 +53,8 @@ beforeAll(async () => {
   db = await replayDb();
   await db.exec(`
     insert into public.users (id, email) values ('${A}', 'a@example.org'), ('${B}', 'b@example.org');
-    insert into public.profiles (id, username, blocks) values ('${A}', 'ann', '[{"kind":"booking_request"}]'), ('${B}', 'bob', '[]')
-      on conflict (id) do update set username = excluded.username, blocks = excluded.blocks;
+    insert into public.profiles (id, username, blocks, handle_grant) values ('${A}', 'ann', '[{"kind":"booking_request"}]', 'root-handle-fixture'), ('${B}', 'bob', '[]', 'root-handle-fixture')
+      on conflict (id) do update set handle_grant = excluded.handle_grant, username = excluded.username, blocks = excluded.blocks;
     insert into public.booking_event_types (id, user_id, slug, title, duration_minutes, minimum_notice_hours) values ('${ET}', '${A}', 'intro', 'Intro', 30, 0);
     insert into public.booking_event_type_hosts (event_type_id, user_id, priority) values ('${ET}', '${A}', 0);
     insert into public.availability_cache (user_id, day, free_bits) values ('${A}', '${day}', repeat('1', 96)::bit(96));

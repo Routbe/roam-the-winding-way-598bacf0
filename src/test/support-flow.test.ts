@@ -47,7 +47,7 @@ beforeAll(async () => {
   db = await replayDb();
   await db.exec(`
     insert into public.users (id, email) values ('${MEMBER}', 'jona@example.test');
-    insert into public.profiles (id, username) values ('${MEMBER}', 'jona') on conflict (id) do update set username = excluded.username;
+    insert into public.profiles (id, username, handle_grant) values ('${MEMBER}', 'jona', 'root-handle-fixture') on conflict (id) do update set handle_grant = excluded.handle_grant, username = excluded.username;
   `);
 }, 300_000);
 afterAll(async () => {

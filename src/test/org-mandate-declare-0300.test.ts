@@ -32,7 +32,7 @@ beforeAll(async () => {
   await applyReleased(db, "0300_organization_attestations.sql");
   await db.exec(`
     insert into public.users (id, email) values ('${A}', 'owner@acme-trust.example');
-    insert into public.profiles (id, username) values ('${A}', 'acme-owner') on conflict (id) do update set username = excluded.username;
+    insert into public.profiles (id, username, handle_grant) values ('${A}', 'acme-owner', 'root-handle-fixture') on conflict (id) do update set handle_grant = excluded.handle_grant, username = excluded.username;
     insert into public.workspaces (id, name, slug, domain) values ('${W}', 'Acme', 'acme-trust', '${DOMAIN}');
     insert into public.workspace_members (workspace_id, user_id, role) values ('${W}', '${A}', 'owner');
     insert into public.identity_verifications (user_id, is_verified, verification_provider, verified_at) values ('${A}', true, 'didit', now());
