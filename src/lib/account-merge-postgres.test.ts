@@ -112,6 +112,34 @@ it("refuses a merge while the secondary still owns a card replacement record", a
   } finally { await db.exec("rollback"); }
 }, 30_000);
 
+const TRUST_WS = "44444444-4444-4444-8444-444444444444";
+async function seedTrustWorkspace() {
+  await db.query("insert into public.workspaces(id,name,slug,domain) values($1,'Acme','acme-merge','acme-merge.example')", [TRUST_WS]);
+  await db.query(`insert into public.workspace_trust_attestations(workspace_id,layer,kind,subject_nullifier,country,evidence_digest,expires_at)
+    values($1,'entity','vat_vies',decode(repeat('01',32),'hex'),'BE',decode(repeat('02',32),'hex'),now()+interval '365 days')`, [TRUST_WS]);
+}
+
+it("refuses a merge while the secondary owns a verified work e-mail (db/0300)", async () => {
+  try {
+    await seed(); await seedTrustWorkspace();
+    await db.query(`insert into public.workspace_work_emails(workspace_id,user_id,domain,email_hash,status,code_expires_at,verified_at,expires_at)
+      values($1,$2,'acme-merge.example',decode(repeat('03',32),'hex'),'verified',now(),now(),now()+interval '365 days')`, [TRUST_WS, S]);
+    await caller(S);
+    await expect(merge()).rejects.toThrow("merge_blocked:workspace_work_emails");
+  } finally { await db.exec("rollback"); }
+}, 30_000);
+
+it("refuses a merge while the secondary holds a workspace mandate (db/0300)", async () => {
+  try {
+    await seed(); await seedTrustWorkspace();
+    await db.query(`insert into public.workspace_mandates(workspace_id,attestation_id,holder_user_id,level,basis,statement_digest,expires_at)
+      select $1, a.id, $2, 'proven', 'kbo_extract', decode(repeat('04',32),'hex'), now()+interval '365 days'
+        from public.workspace_trust_attestations a where a.workspace_id = $1`, [TRUST_WS, S]);
+    await caller(S);
+    await expect(merge()).rejects.toThrow("merge_blocked:workspace_mandates");
+  } finally { await db.exec("rollback"); }
+}, 30_000);
+
 it("runtime cannot assume the executor role or call the function without a user context", async () => {
   try {
     await seed(); await db.exec("set local role rout_app");
